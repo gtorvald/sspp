@@ -37,9 +37,10 @@ void	writeMatrix(char *file, size_t N, size_t M, vector <vector <T> > &matrixC) 
 }
 
 template <class T>
-void	algorithm(char *type, char *file, vector <vector <T> > matrixA, vector <vector <T> > matrixB) {
+void	algorithm(char *type, char *file, vector <vector <T> > matrixA, vector <vector <T> > matrixB, bool time) {
 	vector <vector <T> > matrixC;
 
+	clock_t time_start = clock();
 	matrixC.resize(matrixA.size());
 	for (int i = 0; i < matrixC.size(); i++)
 		matrixC[i].resize(matrixB[0].size());
@@ -73,6 +74,9 @@ void	algorithm(char *type, char *file, vector <vector <T> > matrixA, vector <vec
 			for (int j = 0; j < matrixC[0].size(); j++)
 				for (int i = 0; i < matrixC.size(); i++)
 					matrixC[i][j] += matrixA[i][k] * matrixB[k][j];
+	clock_t time_end = clock();
+	if (time)
+		cout << (float) (time_end - time_start) / CLOCKS_PER_SEC << endl;
 	writeMatrix(file, matrixC.size(), matrixC[0].size(), matrixC);
 }
 
@@ -81,6 +85,7 @@ int main(int argc, char **argv)
 	FILE *f;
 	f = fopen(argv[1], "rb");
 	char type;
+	bool time = argc == 6;
 
 	fread(&type, sizeof(char), 1, f);
 	if (type == 'f') {
@@ -91,7 +96,7 @@ int main(int argc, char **argv)
 		f = fopen(argv[2], "rb");
 		fread(&type, sizeof(char), 1, f);
 		readMatrix(f, matrixB);
-		algorithm(argv[4], argv[3], matrixA, matrixB);
+		algorithm(argv[4], argv[3], matrixA, matrixB, time);
 	} else if (type == 'd') {
 		vector <vector <double> > matrixA;
 		vector <vector <double> > matrixB;
@@ -100,7 +105,7 @@ int main(int argc, char **argv)
 		f = fopen(argv[2], "rb");
 		fread(&type, sizeof(char), 1, f);
 		readMatrix(f, matrixB);
-		algorithm(argv[4], argv[3], matrixA, matrixB);
+		algorithm(argv[4], argv[3], matrixA, matrixB, time);
 	}
 	fclose(f);
 	return 0;

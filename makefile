@@ -5,8 +5,9 @@ SRCS_TEST_GENERATE = generating.java
 TEST_GENERATE = generating
 SRCS_TEST_TESTING = testing.java
 TEST_TESTING = testing
+FILE_TIME = time.txt
 
-.PHONY: all test generate fclean
+.PHONY: all test generate fclean report
 
 all:
 	@$(G++) $(SRCS) -o $(NAME)
@@ -32,5 +33,21 @@ test: all
 	rm -f "test/$$type $$size*$$size C test" ; \
 	done ; done ; done
 
+report: all
+	@echo "Testing time for float matrix 300x300 ..."
+	@touch $(FILE_TIME) ; \
+	for index in ijk ikj jik jki kij kji ; do \
+	for ((i = 0; i < 10; i++)) ; do \
+	./$(NAME) "test/f 300*300 A" "test/f 300*300 B" file $$index plot >> $(FILE_TIME) ; \
+	done ; done;
+	@rm  file
+	@python3 plot.py < $(FILE_TIME)
+	@rm $(FILE_TIME)
+	@Echo "Tested"
+
 fclean:
-	rm -f $(TEST_GENERATE).class $(TEST_TESTING).class $(NAME)
+	@rm -f $(TEST_GENERATE).class $(TEST_TESTING).class $(NAME)
+	@Echo "Cleaned"
+
+re: fclean all
+	
