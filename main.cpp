@@ -63,7 +63,7 @@ void	algorithm(char *type, char *file, vector <vector <T> > matrixA, vector <vec
 		for (int j = 0; j < matrixC[0].size(); j++)
 			for (int i = 0; i < matrixC.size(); i++)
 				for (int k = 0; k < matrixB.size(); k++)
-					matrixC[i][j] += matrixA[i][k] * matrixB[k][j];
+					matrixC[i][j] += matrixA[i][k] * matrixB[j][k];
 	else if (!strcmp(type, "jki"))
 		for (int j = 0; j < matrixC[0].size(); j++)
 			for (int k = 0; k < matrixB.size(); k++)
