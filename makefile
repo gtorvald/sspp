@@ -33,7 +33,10 @@ test: all
 	rm -f "test/$$type $$size*$$size C test" ; \
 	done ; done ; done
 
-report: all
+report:
+	python3 plot.py < $(FILE_TIME)
+
+report11: all
 	@echo "One minute pls ..."
 	@touch $(FILE_TIME) ;
 	@for size in 1000 ; do \
