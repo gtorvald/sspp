@@ -22,7 +22,7 @@ generate: all
 
 test: all
 	@for type in f ; do \
-	for size in 1000 2000 ; do \
+	for size in 10 30 50 100 150 ; do \
 	for index in ijk ikj ; do \
 	./$(NAME) "test/$$type $$size*$$size A" "test/$$type $$size*$$size B" "test/$$type $$size*$$size C test" $$index 72 ; \
 	javac $(SRCS_TEST_TESTING) ; \
