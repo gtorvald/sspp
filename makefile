@@ -14,10 +14,10 @@ all:
 
 generate: all
 	@for type in f ; do \
-	for size in 1000 2000 3000 4000 5000; do \
+	for size in 10 30 ; do \
 	javac $(SRCS_TEST_GENERATE) ; \
 	java $(TEST_GENERATE) $$type $$size $$size "test/$$type $$size*$$size A" "test/$$type $$size*$$size B" ; \
-	./$(NAME) "test/$$type $$size*$$size A" "test/$$type $$size*$$size B" "test/$$type $$size*$$size C" ikj ; \
+	./$(NAME) "test/$$type $$size*$$size A" "test/$$type $$size*$$size B" "test/$$type $$size*$$size C" ikj 72; \
 	done ; done
 
 test: all
@@ -33,19 +33,19 @@ test: all
 	rm -f "test/$$type $$size*$$size C test" ; \
 	done ; done ; done
 
-report:
+report: report11
 	python3 plot.py < $(FILE_TIME)
 
 report11: all
 	@echo "One minute pls ..."
-	@for size in 1000 2000 3000 4000 5000 ; do \
-	./$(NAME) "test/f $$size*$$size A" "test/f $$size*$$size B" file ijk 32 plot ; \
+	@for size in 10 30 50 100 150 ; do \
+	./$(NAME) "test/f $$size*$$size A" "test/f $$size*$$size B" file ijk 32 plot >> $(FILE_TIME); \
 	done ;
-	@for size in 1000 2000 3000 4000 5000 ; do \
-	./$(NAME) "test/f $$size*$$size A" "test/f $$size*$$size B" file ikj 32 plot ; \
+	@for size in 10 30 50 100 150 ; do \
+	./$(NAME) "test/f $$size*$$size A" "test/f $$size*$$size B" file ikj 32 plot >> $(FILE_TIME); \
 	done ;
-	@for size in 1000 2000 3000 4000 5000 ; do \
-	./$(NAME) "test/f $$size*$$size A" "test/f $$size*$$size B" file ikj 72 plot ; \
+	@for size in 10 30 50 100 150 ; do \
+	./$(NAME) "test/f $$size*$$size A" "test/f $$size*$$size B" file ikj 72 plot >> $(FILE_TIME); \
 	done ;
 	@rm  file
 	@Echo "Tested"

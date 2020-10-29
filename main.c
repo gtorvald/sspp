@@ -81,8 +81,8 @@ int     main(int argc, char **argv) {
         size_t		size;
         float     	**matrixA, **matrixB, **matrixC;
         int     	eventSet = PAPI_NULL;
-        int   		eventCodes[4] = {PAPI_L1_DCM, PAPI_L1_ICM, PAPI_FP_OPS, PAPI_TOT_CYC};
-        long long  	values[4];
+        int   		eventCodes[3] = {PAPI_L1_DCM, PAPI_L1_ICM, PAPI_TOT_CYC};
+        long long  	values[3];
 
         matrixA = readMatrix(argv[1], &size);
         matrixB = readMatrix(argv[2], &size);
@@ -90,25 +90,22 @@ int     main(int argc, char **argv) {
                 return handleError(0);
         if (PAPI_create_eventset(&eventSet) != PAPI_OK)
                 return handleError(1);
-        if (PAPI_add_events(eventSet, eventCodes, 4) != PAPI_OK)
+        if (PAPI_add_events(eventSet, eventCodes, 3) != PAPI_OK)
                 return handleError(2);
         if (PAPI_start(eventSet) != PAPI_OK)
                 return handleError(3);
         matrixC = algorithm(matrixA, matrixB, size, argv[4], atoi(argv[5]));
         if (PAPI_stop(eventSet, values) != PAPI_OK)
                 return handleError(4);
-        if (PAPI_remove_events(eventSet,eventCodes, 4) != PAPI_OK)
+        if (PAPI_remove_events(eventSet,eventCodes, 3) != PAPI_OK)
                 return handleError(5);
         if (PAPI_destroy_eventset(&eventSet) != PAPI_OK)
                 return handleError(6);
         PAPI_shutdown();
-        writeMatrix(argv[3], size, matrixC);
-        printf("ready\n");
         if (argc == 7) {
-		    printf("%f\n", (float) values[3] / CLOCKS_PER_SEC); // time
+		    printf("%f\n", (float) values[2] / CLOCKS_PER_SEC); // time
 			printf("%lld\n", values[0] + values[1]); // L1
-			printf("%ld\n", values[3]); // CPU
-			printf("%lld\n", values[2]); // FLP
+			printf("%ld\n", values[2]); // CPU
         }
         for (int i = 0; i < size; i++)
 			free(matrixA[i]);
