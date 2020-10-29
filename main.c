@@ -77,6 +77,12 @@ float   **algorithm(float **matrixA, float **matrixB, size_t size, char *type, i
         return matrixC;
 }
 
+void	freeMatrix(float ***matrix, int size) {
+	for (int i = 0; i < size; i++)
+		free(*(matrix[i]));
+	free(*matrix);
+}
+
 int     main(int argc, char **argv) { 
         size_t		size;
         float     	**matrixA, **matrixB, **matrixC;
@@ -109,5 +115,8 @@ int     main(int argc, char **argv) {
 			printf("%ld\n", values[3]); // CPU
 			printf("%lld\n", values[2]); // FLP
         }
+        freeMatrix(&matrixA, size);
+        freeMatrix(&matrixB, size);
+        freeMatrix(&matrixC, size);
         return 0;
 }
