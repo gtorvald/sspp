@@ -94,8 +94,10 @@ int     main(int argc, char **argv) {
                 return handleError(2);
         if (PAPI_start(eventSet) != PAPI_OK)
                 return handleError(3);
+	clock_t start = clock();
         matrixC = algorithm(matrixA, matrixB, size, argv[4], atoi(argv[5]));
-        if (PAPI_stop(eventSet, values) != PAPI_OK)
+        clock_t end = clock();
+	if (PAPI_stop(eventSet, values) != PAPI_OK)
                 return handleError(4);
         if (PAPI_remove_events(eventSet,eventCodes, 3) != PAPI_OK)
                 return handleError(5);
@@ -103,7 +105,7 @@ int     main(int argc, char **argv) {
                 return handleError(6);
         PAPI_shutdown();
         if (argc == 7) {
-		    printf("%f\n", (float) values[2] / CLOCKS_PER_SEC / 1000); // time
+		    printf("%f\n", (float) (end - start) / CLOCKS_PER_SEC); // time
 			printf("%lld\n", values[0] + values[1]); // L1
 			printf("%ld\n", values[2]); // CPU
         }

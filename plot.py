@@ -47,7 +47,7 @@ for i in range(0, 5):
 	# data = float(input())
 	# FLP_72ikj.append(data)
 
-plt.title("Time (PAPI_TOT_CYC)")
+plt.title("Time (clock())")
 plt.plot(["1000", "2000", "3000", "4000", "5000"], time_32ijk, label='32 ijk')
 plt.plot(["1000", "2000", "3000", "4000", "5000"], time_32ikj, label='32 ikj')
 plt.plot(["1000", "2000", "3000", "4000", "5000"], time_72ikj, label='72 ikj')
