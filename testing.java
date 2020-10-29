@@ -3,7 +3,7 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 
 class testing {
-	private static double EPS = 1e-20;
+	private static double EPS = 1e-9;
 
 	private static byte[] reverseByteMassive(byte [] number) {
 		for (int i = 0; i < number.length / 2; i++) {
