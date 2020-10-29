@@ -38,19 +38,16 @@ report:
 
 report11: all
 	@echo "One minute pls ..."
-	@touch $(FILE_TIME) ;
-	@for size in 1000 ; do \
-	./$(NAME) "test/f $$size*$$size A" "test/f $$size*$$size B" file ijk 32 plot >> $(FILE_TIME) ; \
+	@for size in 1000 2000 3000 4000 5000 ; do \
+	./$(NAME) "test/f $$size*$$size A" "test/f $$size*$$size B" file ijk 32 plot ; \
 	done ;
-	@for size in 1000 ; do \
-	./$(NAME) "test/f $$size*$$size A" "test/f $$size*$$size B" file ikj 32 plot >> $(FILE_TIME) ; \
+	@for size in 1000 2000 3000 4000 5000 ; do \
+	./$(NAME) "test/f $$size*$$size A" "test/f $$size*$$size B" file ikj 32 plot ; \
 	done ;
-	@for size in 1000 ; do \
-	./$(NAME) "test/f $$size*$$size A" "test/f $$size*$$size B" file ikj 72 plot >> $(FILE_TIME) ; \
+	@for size in 1000 2000 3000 4000 5000 ; do \
+	./$(NAME) "test/f $$size*$$size A" "test/f $$size*$$size B" file ikj 72 plot ; \
 	done ;
 	@rm  file
-	@python3 plot.py < $(FILE_TIME)
-	@rm $(FILE_TIME)
 	@Echo "Tested"
 
 fclean:
