@@ -103,7 +103,7 @@ int     main(int argc, char **argv) {
                 return handleError(6);
         PAPI_shutdown();
         if (argc == 7) {
-		    printf("%f\n", (float) values[2] / CLOCKS_PER_SEC); // time
+		    printf("%f\n", (float) values[2] / CLOCKS_PER_SEC / 1000); // time
 			printf("%lld\n", values[0] + values[1]); // L1
 			printf("%ld\n", values[2]); // CPU
         }

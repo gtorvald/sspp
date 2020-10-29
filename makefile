@@ -10,7 +10,7 @@ FILE_TIME = time.txt
 .PHONY: all test generate fclean report
 
 all:
-	@$(G++) -std=c99 $(SRCS) -o $(NAME)
+	@$(G++) -std=c99 -L/usr/lib64 -lpapi $(SRCS) -o $(NAME)
 
 generate: all
 	@for type in f ; do \
