@@ -22,8 +22,8 @@ float	**readMatrix(char *file, size_t *size) {
 	fread(size, sizeof(size_t), 1, f);
 	fread(size, sizeof(size_t), 1, f);
 	matrix = (float**) malloc(sizeof(float*) * *size);
-        for (int i = 0; i < *size; i++)
-            matrix[i] = malloc(sizeof(float) * *size);
+    for (int i = 0; i < *size; i++)
+        matrix[i] = malloc(sizeof(float) * *size);
 	for (int i = 0; i < *size; i++)
 		for (int j = 0; j < *size; j++)
 			fread(&(matrix[i][j]), sizeof(float), 1, f);
@@ -77,12 +77,6 @@ float   **algorithm(float **matrixA, float **matrixB, size_t size, char *type, i
         return matrixC;
 }
 
-void	freeMatrix(float ***matrix, int size) {
-	for (int i = 0; i < size; i++)
-		free(*(matrix[i]));
-	free(*matrix);
-}
-
 int     main(int argc, char **argv) { 
         size_t		size;
         float     	**matrixA, **matrixB, **matrixC;
@@ -109,14 +103,21 @@ int     main(int argc, char **argv) {
                 return handleError(6);
         PAPI_shutdown();
         writeMatrix(argv[3], size, matrixC);
+        printf("ready\n");
         if (argc == 7) {
 		    printf("%f\n", (float) values[3] / CLOCKS_PER_SEC); // time
 			printf("%lld\n", values[0] + values[1]); // L1
 			printf("%ld\n", values[3]); // CPU
 			printf("%lld\n", values[2]); // FLP
         }
-        freeMatrix(&matrixA, size);
-        freeMatrix(&matrixB, size);
-        freeMatrix(&matrixC, size);
+        for (int i = 0; i < size; i++)
+			free(matrixA[i]);
+		free(matrixA);
+		for (int i = 0; i < size; i++)
+			free(matrixB[i]);
+		free(matrixB);
+		for (int i = 0; i < size; i++)
+			free(matrixC[i]);
+		free(matrixC);
         return 0;
 }
