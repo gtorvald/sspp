@@ -53,18 +53,25 @@ int main(int argc, char **argv)
 		printf("Time of %d-process = %lf\n", rank, time);
 	} else { // прием простых чисел и времени 0-вым процессом от остальных
 		FILE *f;
+		int count = 0;
 		f = fopen(argv[3], "w");
 		for (int i = min - 1; i < sqrt(max); i++) // печать простых чисел до sqrt(n)
-			if (str[i])
+			if (str[i]) {
+				count++;
 				fprintf(f, "%d ", str[i]);
+			}
 		for (int i = 0; i < step; i++) // печать своих простых чисел
-			if (data[i])
+			if (data[i]) {
+				count++;
 				fprintf(f, "%d ", data[i]);
+			}
 		for (int i = 0; i < size - 1; i++) { // прием и печать простых чисел остальных процессов
 			MPI_Recv(data, step, MPI_INT, MPI_ANY_SOURCE, 2, MPI_COMM_WORLD, &status);
 			for (int i = 0; i < step; i++)
-				if (data[i])
+				if (data[i]) {
+					count++;
 					fprintf(f, "%d ", data[i]);
+				}
 		}
 		fprintf(f, "\n");
 		fclose(f);
@@ -76,6 +83,7 @@ int main(int argc, char **argv)
 			sumTime += time;
 		}
 		printf("Summ of time = %lf\n", sumTime);
+		printf("Count of numbers = %d\n", count);
 	}
 	MPI_Barrier(MPI_COMM_WORLD);
 	MPI_Finalize();
