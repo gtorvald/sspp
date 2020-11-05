@@ -61,14 +61,14 @@ int main(int argc, char **argv)
 				fprintf(f, "%d ", str[i]);
 			}
 		for (int i = 0; i < step; i++) // печать своих простых чисел
-			if (data[i]) {
+			if (data[i] > min) {
 				count++;
 				fprintf(f, "%d ", data[i]);
 			}
 		for (int i = 0; i < size - 1; i++) { // прием и печать простых чисел остальных процессов
 			MPI_Recv(data, step, MPI_INT, MPI_ANY_SOURCE, 2, MPI_COMM_WORLD, &status);
 			for (int i = 0; i < step; i++)
-				if (data[i]) {
+				if (data[i] > min) {
 					count++;
 					fprintf(f, "%d ", data[i]);
 				}
