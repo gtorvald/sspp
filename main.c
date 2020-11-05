@@ -1,122 +1,83 @@
-#include <stdlib.h>
-#include <unistd.h>
+#include <mpi.h>
 #include <stdio.h>
-#include <string.h>
-#include <papi.h>
-#include <time.h>
+#include <stdlib.h>
+#include <math.h>
 
-#define min(a,b) {a < b ? a : b}
+int main(int argc, char **argv)
+{
+	int size, rank, i, min = atoi(argv[1]), max = atoi(argv[2]);
+	int str[max];
 
-int     handleError(int code) {
-        printf ("Error: %d\n", code);
-        return 1;
-}
-
-float	**readMatrix(char *file, size_t *size) {
-	float	**matrix;
-	char	type;
-	FILE	*f;
-	f = fopen(file, "rb");
-	fread(&type, sizeof(char), 1, f);
-
-	fread(size, sizeof(size_t), 1, f);
-	fread(size, sizeof(size_t), 1, f);
-	matrix = (float**) malloc(sizeof(float*) * *size);
-    for (int i = 0; i < *size; i++)
-        matrix[i] = malloc(sizeof(float) * *size);
-	for (int i = 0; i < *size; i++)
-		for (int j = 0; j < *size; j++)
-			fread(&(matrix[i][j]), sizeof(float), 1, f);
-	fclose(f);
-	return matrix;
-}
-
-void	writeMatrix(char *file, size_t size, float **matrixC) {
-	FILE *f;
-	f = fopen(file, "wb");
-	char typeF = 'f';
-
-	fwrite(&typeF, sizeof(char), 1, f);
-	fwrite(&size, sizeof(size_t), 1, f);
-	fwrite(&size, sizeof(size_t), 1, f);
-	for (int i = 0; i < size; i++)
-		for (int j = 0; j < size; j++)
-			fwrite(&(matrixC[i][j]), sizeof(float), 1, f);
-	fclose(f);
-}
-
-float   **algorithm(float **matrixA, float **matrixB, size_t size, char *type, int size_block) {
-        float   **matrixC = (float**) malloc(sizeof(float*) * size);
-
-        for (int i = 0; i < size; i++)
-           	matrixC[i] = malloc(sizeof(float) * size);
-        if (!strcmp(type, "ikj"))
-	        for (int i = 0; i < size; i += size_block)
-	                for (int k = 0; k < size; k += size_block)
-	                        for (int j = 0; j < size; j += size_block) {
-	                        	int ii_max = min(size, i + size_block);
-	                        	int jj_max = min(size, j + size_block);
-	                        	int kk_max = min(size, k + size_block);
-								for (int ii = i; ii < ii_max; ii++)
-									for (int kk = k; kk < kk_max; kk++)
-										for (int jj = j; jj < jj_max; jj++)
-											matrixC[ii][jj] += matrixA[ii][kk] * matrixB[kk][jj];
-	                        }
-	  	else
-	  		for (int i = 0; i < size; i += size_block)
-	                for (int j = 0; j < size; j += size_block)
-	                        for (int k = 0; k < size; k += size_block) {
-	                        	int ii_max = min(size, i + size_block);
-	                        	int jj_max = min(size, j + size_block);
-	                        	int kk_max = min(size, k + size_block);
-								for (int ii = i; ii < ii_max; ii++)
-									for (int jj = j; jj < jj_max; jj++)
-										for (int kk = k; kk < kk_max; kk++)
-											matrixC[ii][jj] += matrixA[ii][kk] * matrixB[kk][jj];
-	                        }
-        return matrixC;
-}
-
-int     main(int argc, char **argv) { 
-        size_t		size;
-        float     	**matrixA, **matrixB, **matrixC;
-        int     	eventSet = PAPI_NULL;
-        int   		eventCodes[3] = {PAPI_L1_DCM, PAPI_L1_ICM, PAPI_TOT_CYC};
-        long long  	values[3];
-
-        matrixA = readMatrix(argv[1], &size);
-        matrixB = readMatrix(argv[2], &size);
-        if(PAPI_library_init(PAPI_VER_CURRENT) != PAPI_VER_CURRENT )
-                return handleError(0);
-        if (PAPI_create_eventset(&eventSet) != PAPI_OK)
-                return handleError(1);
-        if (PAPI_add_events(eventSet, eventCodes, 3) != PAPI_OK)
-                return handleError(2);
-        if (PAPI_start(eventSet) != PAPI_OK)
-                return handleError(3);
-	clock_t start = clock();
-        matrixC = algorithm(matrixA, matrixB, size, argv[4], atoi(argv[5]));
-        clock_t end = clock();
-	if (PAPI_stop(eventSet, values) != PAPI_OK)
-                return handleError(4);
-        if (PAPI_remove_events(eventSet,eventCodes, 3) != PAPI_OK)
-                return handleError(5);
-        if (PAPI_destroy_eventset(&eventSet) != PAPI_OK)
-                return handleError(6);
-        PAPI_shutdown();
-        if (argc == 7) {
-		    printf("%f\n", (float) (end - start) / CLOCKS_PER_SEC); // time
-			printf("%lld\n", values[0] + values[1]); // L1
-			printf("%ld\n", values[2]); // CPU
-        }
-        for (int i = 0; i < size; i++)
-			free(matrixA[i]);
-		free(matrixA);
-		for (int i = 0; i < size; i++)
-			free(matrixB[i]);
-		free(matrixB);
-		for (int i = 0; i < size; i++)
-			free(matrixC[i]);
-		free(matrixC);
-        return 0;
+	MPI_Init(&argc, &argv);
+	MPI_Comm_size(MPI_COMM_WORLD, &size);
+	MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+	MPI_Status status;
+	MPI_Barrier(MPI_COMM_WORLD);
+	// инициализация массива
+	double time_start = MPI_Wtime();
+	for (int i = 0; i < max; i++) {
+		str[i] = i + 1;
+		if (str[i] == 1)
+			str[i] = 0;
+	}
+	// поиск первых простых чисел до sqrt(max)
+	for (int i = 0; i < sqrt(max); i++) {
+		int flag = str[i];
+		for (int j = 2; j <= sqrt(str[i]); j++)
+			if (str[i] % j == 0) {
+				flag = 0;
+				break;
+			}
+		str[i] = flag;
+	}
+	// вычеркивание числе во всех процессах
+	int step = roundf((float)(max - sqrt(max)) / size + 1);
+	int begin = sqrt(max) + rank * step;
+	int data[step];
+	for (int i = 0; i < step; i++)
+		data[i] = 0;
+	for (int i = begin; i < begin + step && i < max; i++) {
+		for (int j = 0; j < sqrt(max); j++)
+			if (str[j] && (str[i] % str[j] == 0)) {
+				str[i] = 0;
+				break;
+			}
+		data[i - begin] = str[i];
+	}
+	double time_end = MPI_Wtime();
+	// отправка простых чисел и времени 0-ому процессу
+	if (rank) {
+		MPI_Send(data, step, MPI_INT, 0, 2, MPI_COMM_WORLD);
+		double time = time_end - time_start;
+		MPI_Send(&time, 1, MPI_DOUBLE, 0, 1, MPI_COMM_WORLD);
+		printf("Time of %d-process = %lf\n", rank, time);
+	} else { // прием простых чисел и времени 0-вым процессом от остальных
+		FILE *f;
+		f = fopen(argv[3], "w");
+		for (int i = min - 1; i < sqrt(max); i++) // печать простых чисел до sqrt(n)
+			if (str[i])
+				fprintf(f, "%d ", str[i]);
+		for (int i = 0; i < step; i++) // печать своих простых чисел
+			if (data[i])
+				fprintf(f, "%d ", data[i]);
+		for (int i = 0; i < size - 1; i++) { // прием и печать простых чисел остальных процессов
+			MPI_Recv(data, step, MPI_INT, MPI_ANY_SOURCE, 2, MPI_COMM_WORLD, &status);
+			for (int i = 0; i < step; i++)
+				if (data[i])
+					fprintf(f, "%d ", data[i]);
+		}
+		fprintf(f, "\n");
+		fclose(f);
+		double sumTime = time_end - time_start;
+		printf("Time of %d-process = %lf\n", rank, time_end - time_start);
+		for (int i = 0; i < size - 1; i++) { // прием и печать времени остальных процессов
+			double time;
+			MPI_Recv(&time, 1, MPI_DOUBLE, MPI_ANY_SOURCE, 1, MPI_COMM_WORLD, &status);
+			sumTime += time;
+		}
+		printf("Summ of time = %lf\n", sumTime);
+	}
+	MPI_Barrier(MPI_COMM_WORLD);
+	MPI_Finalize();
+	return 0;
 }
