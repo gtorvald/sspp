@@ -75,14 +75,17 @@ int main(int argc, char **argv)
 		}
 		fprintf(f, "\n");
 		fclose(f);
-		double sumTime = time_end - time_start;
+		double sumTime = time_end - time_start, max_time = sumTime;
 		printf("Time of %d-process = %lf\n", rank, time_end - time_start);
 		for (int i = 0; i < size - 1; i++) { // прием и печать времени остальных процессов
 			double time;
 			MPI_Recv(&time, 1, MPI_DOUBLE, MPI_ANY_SOURCE, 1, MPI_COMM_WORLD, &status);
+			if (time > max_time)
+				max_time = time;
 			sumTime += time;
 		}
 		printf("Summ of time = %lf\n", sumTime);
+		printf("Max of time = %lf\n", max_time);
 		printf("Count of numbers = %d\n", count);
 	}
 	MPI_Barrier(MPI_COMM_WORLD);
