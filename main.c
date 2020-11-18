@@ -3,10 +3,14 @@
 #include <stdlib.h>
 #include <math.h>
 
+int maximum(int a, int b) {
+	return a > b ? a : b;
+}
+
 int main(int argc, char **argv)
 {
-	int size, rank, i, min = atoi(argv[1]), max = atoi(argv[2]);
-	int str[max];
+	int size, rank, i, max = atoi(argv[2]), sqrt_max = sqrt(max);
+	int str[sqrt_max], min = maximum(sqrt_max, atoi(argv[1]) - 1);
 
 	MPI_Init(&argc, &argv);
 	MPI_Comm_size(MPI_COMM_WORLD, &size);
@@ -15,35 +19,43 @@ int main(int argc, char **argv)
 	MPI_Barrier(MPI_COMM_WORLD);
 	// инициализация массива
 	double time_start = MPI_Wtime();
-	for (int i = 0; i < max; i++) {
+	for (int i = 0; i < sqrt_max; i++) {
 		str[i] = i + 1;
 		if (str[i] == 1)
 			str[i] = 0;
 	}
 	// поиск первых простых чисел до sqrt(max)
-	for (int i = 0; i < sqrt(max); i++) {
-		int flag = str[i];
-		for (int j = 2; j <= sqrt(str[i]); j++)
-			if (str[i] % j == 0) {
-				flag = 0;
-				break;
-			}
-		str[i] = flag;
-	}
-	// вычеркивание числе во всех процессах
-	int step = roundf((float)(max - sqrt(max)) / size + 1);
-	int begin = sqrt(max) + rank * step;
+	for (int i = 1; i < sqrt_max; i++)
+		if (str[i])
+			for (int j = i + str[i]; j < sqrt_max; j+= str[i])
+				str[j] = 0;
+	// вычеркивание чисел во всех процессах
+	int step = (max - min) / size + ((max - min) % size != 0);
+	int begin = min + rank * step + 1; // число , с которого нужно начинать подсчет
 	int data[step];
-	for (int i = 0; i < step; i++)
-		data[i] = 0;
-	for (int i = begin; i < begin + step && i < max; i++) {
-		for (int j = 0; j < sqrt(max); j++)
-			if (str[j] && (str[i] % str[j] == 0)) {
-				str[i] = 0;
-				break;
-			}
-		data[i - begin] = str[i];
+	for (int i = 0; i < step; i++) {
+		if (i + begin - 1 >= max)
+			data[i] = 0;
+		else
+			data[i] = i + begin;
 	}
+	for (int i = 0; i < sqrt_max; i++) {
+		if (str[i]) {
+			int j = (begin / str[i] + (begin % str[i] != 0)) * str[i] - 1;
+			for (; j < begin + step && j < max; j += str[i]) {
+				data[j - begin + 1] = 0;
+			}
+		}
+	}
+
+	// for (int i = begin; i < begin + step && i < max; i++) {
+	// 	for (int j = 0; j < sqrt_max; j++)
+	// 		if (str[j] && (str[i] % str[j] == 0)) {
+	// 			str[i] = 0;
+	// 			break;
+	// 		}
+	// 	data[i - begin] = str[i];
+	// }
 	double time_end = MPI_Wtime();
 	// отправка простых чисел и времени 0-ому процессу
 	if (rank) {
@@ -55,20 +67,20 @@ int main(int argc, char **argv)
 		FILE *f;
 		int count = 0;
 		f = fopen(argv[3], "w");
-		for (int i = min - 1; i < sqrt(max); i++) // печать простых чисел до sqrt(n)
+		for (int i = atoi(argv[1]) - 1; i < sqrt_max; i++) // печать простых чисел до sqrt(n)
 			if (str[i]) {
 				count++;
 				fprintf(f, "%d ", str[i]);
 			}
 		for (int i = 0; i < step; i++) // печать своих простых чисел
-			if (data[i] > min) {
+			if (data[i]) {
 				count++;
 				fprintf(f, "%d ", data[i]);
 			}
 		for (int i = 0; i < size - 1; i++) { // прием и печать простых чисел остальных процессов
 			MPI_Recv(data, step, MPI_INT, MPI_ANY_SOURCE, 2, MPI_COMM_WORLD, &status);
 			for (int i = 0; i < step; i++)
-				if (data[i] > min) {
+				if (data[i]) {
 					count++;
 					fprintf(f, "%d ", data[i]);
 				}
