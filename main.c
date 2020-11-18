@@ -47,15 +47,6 @@ int main(int argc, char **argv)
 			}
 		}
 	}
-
-	// for (int i = begin; i < begin + step && i < max; i++) {
-	// 	for (int j = 0; j < sqrt_max; j++)
-	// 		if (str[j] && (str[i] % str[j] == 0)) {
-	// 			str[i] = 0;
-	// 			break;
-	// 		}
-	// 	data[i - begin] = str[i];
-	// }
 	double time_end = MPI_Wtime();
 	// отправка простых чисел и времени 0-ому процессу
 	if (rank) {
