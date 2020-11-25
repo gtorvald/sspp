@@ -2,6 +2,11 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
+#include <time.h>
+
+#define THREADS 64
+#define SIZE_STR 10000 // sqrt(10^8)
+#define SIZE_DATA (100000000 - SIZE_STR) / THREADS + 1
 
 typedef struct info
 {
@@ -10,11 +15,11 @@ typedef struct info
 	int		min;
 	int		size;
 	int		rank;
-	int		str[50000000];
+	int		str[SIZE_STR];
 	int		count;
-	int		data[100000000];
+	int		data[SIZE_DATA];
 	int		step; 	
-	clock_t	time;
+	double	time;
 } Information;
 
 int		maximum(int a, int b) {
@@ -23,43 +28,41 @@ int		maximum(int a, int b) {
 
 void	*doWork(void *param) {
 	Information *info = (Information*)param;
-	int str[info->sqrt_max];
 	int i, j;
+	struct timespec time_start, time_finish;
 	// инициализация массива
-	clock_t time_start = clock();
+    clock_gettime(CLOCK_THREAD_CPUTIME_ID, &time_start);
 	for (i = 0; i < info->sqrt_max; i++) {
-		str[i] = i + 1;
-		if (str[i] == 1)
-			str[i] = 0;
+		info->str[i] = i + 1;
+		if (info->str[i] == 1)
+			info->str[i] = 0;
 	}
 	// поиск первых простых чисел до sqrt(max)
 	for (i = 1; i < info->sqrt_max; i++)
-		if (str[i])
-			for (j = i + str[i]; j < info->sqrt_max; j+= str[i])
-				str[j] = 0;
+		if (info->str[i])
+			for (j = i + info->str[i]; j < info->sqrt_max; j+= info->str[i])
+				info->str[j] = 0;
 	// вычеркивание чисел во всех процессах
 	int step = (info->max - info->min) / info->size + ((info->max - info->min) % info->size != 0);
+	// printf("%d\n", step);
+	// printf("%d\n", SIZE_DATA);
 	int begin = info->min + info->rank * step + 1; // число , с которого нужно начинать подсчет
-	int data[step];
 	for (i = 0; i < step; i++) {
 		if (i + begin - 1 >= info->max)
-			data[i] = 0;
+			info->data[i] = 0;
 		else
-			data[i] = i + begin;
+			info->data[i] = i + begin;
 	}
 	for (i = 0; i < info->sqrt_max; i++) {
-		if (str[i]) {
-			int j = (begin / str[i] + (begin % str[i] != 0)) * str[i] - 1;
-			for (; j < begin + step && j < info->max; j += str[i]) {
-				data[j - begin + 1] = 0;
+		if (info->str[i]) {
+			int j = (begin / info->str[i] + (begin % info->str[i] != 0)) * info->str[i] - 1;
+			for (; j < begin + step && j < info->max; j += info->str[i]) {
+				info->data[j - begin + 1] = 0;
 			}
 		}
 	}
-	info->time = (float) (clock() - time_start) / CLOCKS_PER_SEC;
-	for (i = 0; i < step; i++)
-		info->data[i] = data[i];
-	for (i = 0; i < info->sqrt_max; i++)
-		info->str[i] = str[i];
+	clock_gettime(CLOCK_THREAD_CPUTIME_ID, &time_finish);
+	info->time = (double) (time_finish.tv_sec - time_start.tv_sec + 1e-9 * (time_finish.tv_nsec - time_start.tv_nsec));
 	info->step = step;
 	return NULL;
 }
@@ -71,7 +74,7 @@ int		main(int argc, char **argv)
 	Information	info[size];
 	for (i = 0; i < size; i++) {
 		info[i].max = atoi(argv[2]);
-		info[i].sqrt_max = info[i].max / 2;
+		info[i].sqrt_max = SIZE_STR;
 		info[i].min = maximum(info[i].sqrt_max, atoi(argv[1]) - 1);
 		info[i].size = size;
 	}
@@ -110,8 +113,8 @@ int		main(int argc, char **argv)
 			}
 	}
 	fprintf(f, "\n");
-	printf("Summ of time = %lf\n", sumTime);
-	printf("Max of time = %lf\n", maxTime);
-	printf("Count of numbers = %d\n", count);
+	printf("%lf\n", sumTime);
+	printf("%lf\n", maxTime);
+	// printf("Count of numbers = %d\n", count);
 	return 0;
 }
