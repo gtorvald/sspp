@@ -59,16 +59,15 @@ int main(int argc, char **argv)
 	MPI_Status status;
 	MPI_Barrier(MPI_COMM_WORLD);
 	size_t str, clm;
-	int countStr;
+	int countStr, countClm;
 	if (!rank) {
 		float **matrix = readMatrix(argv[1], &str, &clm);
-		// вывод матрицы 
+		// вывод матрицы
 		for (int i = 0; i < str; i++) {
 			for (int j = 0; j < clm; j++)
 				printf("%f ", matrix[i][j]);
 			printf("\n");
 		}
-		printf("\n");
 		//
 		float *vectorB = readVector(argv[2], &clm);
 		// вывод вектора В
@@ -76,52 +75,99 @@ int main(int argc, char **argv)
 			printf("%f ", vectorB[i]);
 		printf("\n\n");
 		//
-		countStr = str / size + (str % size != 0);
-		int j = countStr;
-		for (int i = 1; i < size; i++) {
-			MPI_Send(&str, 1, MPI_INT, i, 0, MPI_COMM_WORLD);
-			MPI_Send(&clm, 1, MPI_INT, i, 1, MPI_COMM_WORLD);
-			MPI_Send(&countStr, 1, MPI_INT, i, 2, MPI_COMM_WORLD);
-			int end = j + countStr;
-			for (; j < str && j < end; j++) {
-				MPI_Send(matrix[j], clm, MPI_FLOAT, i, 3, MPI_COMM_WORLD);
-			}
-			MPI_Send(vectorB, clm, MPI_FLOAT, i, 4, MPI_COMM_WORLD);
-		}
 		float vectorC[str];
-		for (int i = 0; i < str && i < countStr; i++) {
-			vectorC[i] = 0;
-			for (int j = 0; j < clm; j++)
-				vectorC[i] += matrix[i][j] * vectorB[j];
+		if (str >= clm) {
+			countStr = str / size + (str % size != 0);
+			int j = countStr;
+			for (int i = 1; i < size; i++) {
+				MPI_Send(&str, 1, MPI_INT, i, 0, MPI_COMM_WORLD);
+				MPI_Send(&clm, 1, MPI_INT, i, 1, MPI_COMM_WORLD);
+				MPI_Send(&countStr, 1, MPI_INT, i, 2, MPI_COMM_WORLD);
+				int end = j + countStr;
+				for (; j < str && j < end; j++) {
+					MPI_Send(matrix[j], clm, MPI_FLOAT, i, 3, MPI_COMM_WORLD);
+				}
+				MPI_Send(vectorB, clm, MPI_FLOAT, i, 4, MPI_COMM_WORLD);
+			}
+			for (int i = 0; i < str && i < countStr; i++) {
+				vectorC[i] = 0;
+				for (int j = 0; j < clm; j++)
+					vectorC[i] += matrix[i][j] * vectorB[j];
+			}
+			for (int i = 1; i < size; i++) {
+				float vectorCThreads[str];
+				MPI_Recv(vectorCThreads, str, MPI_FLOAT, i, 5, MPI_COMM_WORLD, &status);
+				for (int j = i * countStr; j < str && j < (i + 1) * countStr; j++)
+					vectorC[j] = vectorCThreads[j];
+			}
+		} else {
+			countClm = clm / size + (clm % size != 0);
+			float matrixCopy[clm][str];
+			for (int i = 0; i < clm; i++)
+				for (int j = 0; j < str; j++)
+					matrixCopy[i][j] = matrix[j][i];
+			int j = countClm;
+			for (int i = 1; i < size; i++) {
+				MPI_Send(&str, 1, MPI_INT, i, 0, MPI_COMM_WORLD);
+				MPI_Send(&clm, 1, MPI_INT, i, 1, MPI_COMM_WORLD);
+				MPI_Send(&countClm, 1, MPI_INT, i, 2, MPI_COMM_WORLD);
+				int end = j + countClm;
+				for (; j < clm && j < end; j++)
+					MPI_Send(matrixCopy[j], str, MPI_FLOAT, i, 3, MPI_COMM_WORLD);
+				MPI_Send(vectorB + i * countClm, countClm, MPI_FLOAT, i, 4, MPI_COMM_WORLD);
+			}
+			for (int i = 0; i < str; i++) {
+				vectorC[i] = 0;
+				for (int j = 0; j < countClm; j++)
+					vectorC[i] += matrixCopy[j][i] * vectorB[j];
+			}
+			for (int i = 1; i < size; i++) {
+				float vectorCThreads[str];
+				MPI_Recv(vectorCThreads, str, MPI_FLOAT, i, 5, MPI_COMM_WORLD, &status);
+				for (int j = 0; j < str; j++)
+					vectorC[j] += vectorCThreads[j];
+			}
 		}
-		for (int i = 1; i < size; i++) {
-			float vectorCThreads[str];
-			MPI_Recv(vectorCThreads, str, MPI_FLOAT, i, 5, MPI_COMM_WORLD, &status);
-			for (int j = i * countStr; j < str && j < (i + 1) * countStr; j++)
-				vectorC[j] = vectorCThreads[j];
-		}
+		writeVector(argv[3], str, vectorC);
 		// вывод вектора С
 		for (int i = 0; i < str; i++)
 			printf("%f ", vectorC[i]);
 		printf("\n");
 		//
-		writeVector(argv[3], str, vectorC);
-	} else {
+	}
+	else
+	{
 		MPI_Recv(&str, 1, MPI_INT, 0, 0, MPI_COMM_WORLD, &status);
 		MPI_Recv(&clm, 1, MPI_INT, 0, 1, MPI_COMM_WORLD, &status);
-		MPI_Recv(&countStr, 1, MPI_INT, 0, 2, MPI_COMM_WORLD, &status);
-		float matrix[countStr][(int)clm];
-		for (int i = 0; i < countStr; i++)
-			MPI_Recv(matrix[i], (int) clm, MPI_FLOAT, 0, 3, MPI_COMM_WORLD, &status);
-		float vectorB[(int)clm];
-		MPI_Recv(vectorB, clm, MPI_FLOAT, 0, 4, MPI_COMM_WORLD, &status);
-		float vectorC[(int)str];
-		for (int i = rank * countStr; i < str && i < (rank + 1) * countStr; i++) {
-			vectorC[i] = 0;
-			for (int j = 0; j < (int) clm; j++)
-				vectorC[i] += matrix[i - rank * countStr][j] * vectorB[j];
+		if (str >= clm) {
+			MPI_Recv(&countStr, 1, MPI_INT, 0, 2, MPI_COMM_WORLD, &status);
+			float matrix[countStr][(int)clm];
+			for (int i = 0; i < countStr; i++)
+				MPI_Recv(matrix[i], (int) clm, MPI_FLOAT, 0, 3, MPI_COMM_WORLD, &status);
+			float vectorB[(int)clm];
+			MPI_Recv(vectorB, (int)clm, MPI_FLOAT, 0, 4, MPI_COMM_WORLD, &status);
+			float vectorC[(int)str];
+			for (int i = rank * countStr; i < (int)str && i < (rank + 1) * countStr; i++) {
+				vectorC[i] = 0;
+				for (int j = 0; j < (int) clm; j++)
+					vectorC[i] += matrix[i - rank * countStr][j] * vectorB[j];
+			}
+			MPI_Send(vectorC, (int)str, MPI_FLOAT, 0, 5, MPI_COMM_WORLD);
+		} else {
+			MPI_Recv(&countClm, 1, MPI_INT, 0, 2, MPI_COMM_WORLD, &status);
+			float matrix[countClm][(int)str];
+			for (int i = 0; i < countClm; i++)
+				MPI_Recv(matrix[i], (int) str, MPI_FLOAT, 0, 3, MPI_COMM_WORLD, &status);
+			float vectorB[(int)countClm];
+			MPI_Recv(vectorB, countClm, MPI_FLOAT, 0, 4, MPI_COMM_WORLD, &status);
+			float vectorC[(int)str];
+			for (int i = 0; i < (int) str; i++) {
+				vectorC[i] = 0;
+				for (int j = rank * countClm; j < (int) clm && j < (rank + 1) * countClm; j++)
+					vectorC[i] += matrix[j - rank * countClm][i] * vectorB[j - rank * countClm];
+			}
+			MPI_Send(vectorC, (int)str, MPI_FLOAT, 0, 5, MPI_COMM_WORLD);
 		}
-		MPI_Send(vectorC, (int)str, MPI_FLOAT, 0, 5, MPI_COMM_WORLD);
 	}
 	MPI_Finalize();
 	return 0;
