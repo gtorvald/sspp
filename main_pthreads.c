@@ -4,9 +4,9 @@
 #include <math.h>
 #include <time.h>
 
-#define THREADS 64
-#define SIZE_STR 10000 // sqrt(10^8)
-#define SIZE_DATA (100000000 - SIZE_STR) / THREADS + 1
+#define THREADS 1
+#define SIZE_STR 100 // sqrt(10^8)
+#define SIZE_DATA (10000 - SIZE_STR) + 1
 
 typedef struct info
 {
