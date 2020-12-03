@@ -53,33 +53,33 @@ int main(int argc, char **argv)
 		MPI_Send(data, step, MPI_INT, 0, 2, MPI_COMM_WORLD);
 		double time = time_end - time_start;
 		MPI_Send(&time, 1, MPI_DOUBLE, 0, 1, MPI_COMM_WORLD);
-		printf("Time of %d-process = %lf\n", rank, time);
+		// printf("Time of %d-process = %lf\n", rank, time);
 	} else { // прием простых чисел и времени 0-вым процессом от остальных
 		FILE *f;
 		int count = 0;
-		f = fopen(argv[3], "w");
+		// f = fopen(argv[3], "w");
 		for (int i = atoi(argv[1]) - 1; i < sqrt_max; i++) // печать простых чисел до sqrt(n)
 			if (str[i]) {
 				count++;
-				fprintf(f, "%d ", str[i]);
+				// fprintf(f, "%d ", str[i]);
 			}
 		for (int i = 0; i < step; i++) // печать своих простых чисел
 			if (data[i]) {
 				count++;
-				fprintf(f, "%d ", data[i]);
+				// fprintf(f, "%d ", data[i]);
 			}
 		for (int i = 0; i < size - 1; i++) { // прием и печать простых чисел остальных процессов
 			MPI_Recv(data, step, MPI_INT, MPI_ANY_SOURCE, 2, MPI_COMM_WORLD, &status);
 			for (int i = 0; i < step; i++)
 				if (data[i]) {
 					count++;
-					fprintf(f, "%d ", data[i]);
+					// fprintf(f, "%d ", data[i]);
 				}
 		}
-		fprintf(f, "\n");
-		fclose(f);
+		// fprintf(f, "\n");
+		// fclose(f);
 		double sumTime = time_end - time_start, max_time = sumTime;
-		printf("Time of %d-process = %lf\n", rank, time_end - time_start);
+		// printf("Time of %d-process = %lf\n", rank, time_end - time_start);
 		for (int i = 0; i < size - 1; i++) { // прием и печать времени остальных процессов
 			double time;
 			MPI_Recv(&time, 1, MPI_DOUBLE, MPI_ANY_SOURCE, 1, MPI_COMM_WORLD, &status);
@@ -87,9 +87,9 @@ int main(int argc, char **argv)
 				max_time = time;
 			sumTime += time;
 		}
-		printf("Summ of time = %lf\n", sumTime);
-		printf("Max of time = %lf\n", max_time);
-		printf("Count of numbers = %d\n", count);
+		// printf("Summ of time = %lf\n", sumTime);
+		// printf("Max of time = %lf\n", max_time);
+		printf("%d\n", count);
 	}
 	MPI_Barrier(MPI_COMM_WORLD);
 	MPI_Finalize();

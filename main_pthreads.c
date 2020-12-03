@@ -69,7 +69,7 @@ void	*doWork(void *param) {
 
 int		main(int argc, char **argv)
 {
-	int			size = atoi(argv[4]), i, j;
+	int			size = atoi(argv[3]), i, j;
 	pthread_t	pthreads[size];
 	Information	info[size];
 	for (i = 0; i < size; i++) {
@@ -93,7 +93,7 @@ int		main(int argc, char **argv)
 	}
 	double sumTime = 0, maxTime = 0;
 	int count = 0;
-	FILE *f = fopen(argv[3], "w");
+	// FILE *f = fopen(argv[3], "w");
 	for (i = 0; i < size; i++) {
 		sumTime += info[i].time;
 		if (info[i].time > maxTime)
@@ -103,18 +103,18 @@ int		main(int argc, char **argv)
 			for (j = 0; j < info[i].sqrt_max; j++) {
 				if (info[i].str[j] >= begin) {
 					count++;
-					fprintf(f, "%d ", info[i].str[j]);
+					// fprintf(f, "%d ", info[i].str[j]);
 				}
 			}
 		for (j = 0; j < info[i].step; j++)
 			if (info[i].data[j] >= begin) {
 				count++;
-				fprintf(f, "%d ", info[i].data[j]);
+				// fprintf(f, "%d ", info[i].data[j]);
 			}
 	}
-	fprintf(f, "\n");
-	printf("%lf\n", sumTime);
-	printf("%lf\n", maxTime);
-	// printf("Count of numbers = %d\n", count);
+	// fprintf(f, "\n");
+	// printf("%lf\n", sumTime);
+	// printf("%lf\n", maxTime);
+	printf("%d\n", count);
 	return 0;
 }
