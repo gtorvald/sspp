@@ -4,10 +4,6 @@
 #include <math.h>
 #include <time.h>
 
-#define THREADS 1
-#define SIZE_STR 1000 // sqrt(10^8)
-#define SIZE_DATA (1000000 - SIZE_STR) + 1
-
 typedef struct info
 {
 	int		sqrt_max;
@@ -74,10 +70,10 @@ int		main(int argc, char **argv)
 	Information	info[size];
 	for (i = 0; i < size; i++) {
 		info[i].max = atoi(argv[2]);
-		info[i].sqrt_max = 10000;
+		info[i].sqrt_max = sqrt(info[i].max);
 		info[i].min = maximum(info[i].sqrt_max, atoi(argv[1]) - 1);
 		info[i].size = size;
-		info[i].str = malloc(10000 * sizeof(int));
+		info[i].str = malloc((info[i].sqrt_max + 1) * sizeof(int));
 		info[i].data = malloc(((info[i].max - size) / size + 1) * sizeof(int));
 	}
 	for (i = 0; i < size; i++) {
@@ -114,10 +110,10 @@ int		main(int argc, char **argv)
 				// fprintf(f, "%d ", info[i].data[j]);
 			}
 	}
-	for (i = 0; i < size; i++) {
-		free(info[i].str);
-		free(info[i].data);
-	}
+	// for (i = 0; i < size; i++) {
+	// 	free(info[i].str);
+	// 	free(info[i].data);
+	// }
 	// fprintf(f, "\n");
 	// printf("%lf\n", sumTime);
 	// printf("%lf\n", maxTime);
