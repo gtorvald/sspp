@@ -5,8 +5,8 @@
 #include <time.h>
 
 #define THREADS 1
-#define SIZE_STR 100 // sqrt(10^8)
-#define SIZE_DATA (10000 - SIZE_STR) + 1
+#define SIZE_STR 1000 // sqrt(10^8)
+#define SIZE_DATA (1000000 - SIZE_STR) + 1
 
 typedef struct info
 {
