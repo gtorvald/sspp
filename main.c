@@ -10,7 +10,9 @@ int maximum(int a, int b) {
 int main(int argc, char **argv)
 {
 	int size, rank, i, max = atoi(argv[2]), sqrt_max = sqrt(max);
-	int *str = malloc(sqrt_max * sizeof(int)), min = maximum(sqrt_max, atoi(argv[1]) - 1);
+	int *str = malloc(sqrt_max * sizeof(int));
+	// int str[sqrt_max];
+	int min = maximum(sqrt_max, atoi(argv[1]) - 1);
 
 	MPI_Init(&argc, &argv);
 	MPI_Comm_size(MPI_COMM_WORLD, &size);
@@ -32,7 +34,8 @@ int main(int argc, char **argv)
 	// вычеркивание чисел во всех процессах
 	int step = (max - min) / size + ((max - min) % size != 0);
 	int begin = min + rank * step + 1; // число , с которого нужно начинать подсчет
-	int *data = malloc(step * sizeof(int));
+	int *data = malloc((step + 1) * sizeof(int));
+	// int data[step];
 	for (int i = 0; i < step; i++) {
 		if (i + begin - 1 >= max)
 			data[i] = 0;
