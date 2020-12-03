@@ -15,9 +15,9 @@ typedef struct info
 	int		min;
 	int		size;
 	int		rank;
-	int		str[SIZE_STR];
+	int		*str;
 	int		count;
-	int		data[SIZE_DATA];
+	int		*data;
 	int		step; 	
 	double	time;
 } Information;
@@ -74,9 +74,11 @@ int		main(int argc, char **argv)
 	Information	info[size];
 	for (i = 0; i < size; i++) {
 		info[i].max = atoi(argv[2]);
-		info[i].sqrt_max = SIZE_STR;
+		info[i].sqrt_max = 10000;
 		info[i].min = maximum(info[i].sqrt_max, atoi(argv[1]) - 1);
 		info[i].size = size;
+		info[i].str = malloc(10000 * sizeof(int));
+		info[i].data = malloc(((info[i].max - size) / size + 1) * sizeof(int));
 	}
 	for (i = 0; i < size; i++) {
 		info[i].rank = i;
@@ -111,6 +113,10 @@ int		main(int argc, char **argv)
 				count++;
 				// fprintf(f, "%d ", info[i].data[j]);
 			}
+	}
+	for (i = 0; i < size; i++) {
+		free(info[i].str);
+		free(info[i].data);
 	}
 	// fprintf(f, "\n");
 	// printf("%lf\n", sumTime);
